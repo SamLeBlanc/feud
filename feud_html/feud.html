@@ -1,0 +1,442 @@
+
+<!-- Family Feud Emulator -->
+<!-- This script emulates the family feud experience in your own browser -->
+<!-- There is a game board with 8 hidden answers. If you click on the answer or press
+the 1 to 8 keys, the answer will appear with a ding! If you get the answer wrong (or press X)
+then you will get buzzed, uh oh! -->
+<!-- The answer are "flipped" or roll over to reveal what is the correct answer -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Feud Answer Boxes</title>
+<style>
+  /* General styles */
+  body {
+    font-family: Arial, sans-serif;
+    background-color: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  /* Score square styles */
+  .score-square {
+    background-color: darkblue;
+    color: white;
+    font-size: 60px;
+    padding: 10px 20px;
+    min-width: 120px;
+    min-height: 60px;
+    border-radius: 8px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border: 4px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Board and column styles */
+  .board {
+    background-color: black;
+    border: 5px solid #F4C206;
+    border-radius: 10px;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    max-width: 800px;
+  }
+  .column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  /* Answer box and related elements styles */
+  .answer-box {
+    background-color: #0b3d91;
+    border: 2px solid #f0f0f0;
+    padding: 10px;
+    margin: 2px;
+    cursor: pointer;
+    width: 250px;
+    text-align: center;
+    font-size: 24px;
+    color: #f0f0f0;
+    position: relative;
+    border-radius: 3px;
+    height: 28px;
+    overflow: hidden;
+  }
+  .answer-box.hidden-answer::before {
+    content: attr(data-number);
+    border: 2px solid #f0f0f0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    font-weight: bold;
+    color: #f0f0f0;
+    background: #3E85DA;
+    height: 46px;
+    width: 268px;
+  }
+  .number-circle {
+    z-index: -1;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    font-family: impact;
+    color: #f0f0f0;
+    background-color: #1A1D59;
+    border: 2px solid #4747c9;
+    border-radius: 50%;
+    width: 50px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+  }
+  .hidden-circle {
+    display: none;
+  }
+  .answer-box .answer-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1; /* add this */
+    animation: rollIn 0.3s forwards; /* add this */
+
+}
+
+.answer-box .answer-text::before {
+content: "";
+width: 100%;
+height: 100%;
+background-color: #0652B7;
+position: absolute;
+top: 0;
+left: 0;
+z-index: -1; /* add this */
+}
+
+.answer-box.hidden-answer .answer-text {
+  opacity: 0; /* add this */
+  animation: rollOut 0.3s forwards; /* add this */
+}
+
+@keyframes rollIn {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes rollOut {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+.answer-score {
+  height: 48px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  background: #3E85DA;
+  position: fixed;
+  font-weight: bold;
+  font-size: 26px;
+  right: -2px;
+}
+
+.answer-answer{
+  padding-right:40px;
+  font-size: 26px;
+  font-weight: bold;
+  font-stretch: condensed;
+}
+
+#x-img {
+  display: none;
+  position: fixed;
+  height: 200px;
+  width: 200px;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index:3;
+}
+
+/* Add these styles for the question text */
+.question-text {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.new-question {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.new-question:hover {
+  background-color: #0056b3;
+}
+
+</style>
+<script>
+
+// Initialize an object to store questions and scores
+const question_bank = {};
+
+const correct_answer_audio = new Audio('correct_4.mp3');
+const wrong_answer_audio = new Audio('wrong_2.mp3');
+
+// Function to initialize the game
+function initGame() {
+  loadCSV('question_bank.csv').then(() => {
+    updateAnswerBoxes();
+    document.addEventListener('keydown', handleKeyPress);
+
+    const newQuestionButton = document.getElementById('new-question');
+    newQuestionButton.addEventListener('click', () => {
+        updateAnswerBoxes();
+    });
+  })
+}
+
+// Run the initGame function when the DOM is ready
+document.addEventListener('DOMContentLoaded', initGame);
+
+// A simple CSV parser function
+function parseCSV(text) {
+  // Split the text into rows and remove the header row
+  const rows = text.trim().split('\n');
+  const header = rows.shift().split(',');
+
+  // Map the rows to objects with properties based on the header row
+  return rows.map((row) => {
+    const rowData = row.split(',');
+    return header.reduce((acc, key, idx) => {
+      acc[key] = rowData[idx];
+      return acc;
+    }, {});
+  });
+}
+
+// Function to load and parse the CSV file
+async function loadCSV(fileUrl) {
+  try {
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      throw new Error('Failed to fetch the CSV file');
+    }
+    const text = await response.text();
+    const data = parseCSV(text);
+    Object.assign(question_bank, data);
+    console.log('CSV data loaded:', question_bank);
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
+
+// Update the answer boxes with data from the question bank
+// Update the answer boxes with data from the question bank
+function updateAnswerBoxes() {
+  const randomIndex = Math.floor(Math.random() * Object.keys(question_bank).length);
+  const randomQuestion = question_bank[randomIndex];
+
+  for (let i = 1; i <= 8; i++) {
+    const answerBox = document.querySelector(`#answer-box-${i}`);
+    const answerText = answerBox.querySelector('.answer-answer');
+    const answerScore = answerBox.querySelector('.answer-score');
+    const numberCircle = answerBox.querySelector('.number-circle');
+
+    if (randomQuestion[`Answer${i}`]) {
+      answerText.textContent = randomQuestion[`Answer${i}`].toUpperCase();
+      answerScore.textContent = randomQuestion[`Answer${i}_Score`];
+      numberCircle.style.zIndex = 2;
+    } else {
+      answerText.textContent = '';
+      answerScore.textContent = 0;
+      numberCircle.style.zIndex = -1;
+    }
+  }
+
+  updatePointerEvents()
+
+  // Update the question text
+  const questionText = document.getElementById('question-text').querySelector('span');
+  questionText.textContent = randomQuestion['Question'];
+}
+
+// Function to update the pointer-events style of the answer boxes
+function updatePointerEvents() {
+  const answerBoxes = document.querySelectorAll('.answer-box');
+  answerBoxes.forEach((answerBox) => {
+    const answerText = answerBox.querySelector('.answer-answer');
+    if (answerText.textContent) {
+      answerBox.style.pointerEvents = 'auto';
+    } else {
+      answerBox.style.pointerEvents = 'none';
+    }
+  });
+}
+// Function to update the current score
+function updateCurrentScore() {
+  const answerBoxes = document.querySelectorAll('.answer-box');
+  let totalScore = 0;
+  answerBoxes.forEach((answerBox) => {
+    if (!answerBox.classList.contains('hidden-answer')) {
+      const answerScore = parseInt(answerBox.querySelector('.answer-score').textContent);
+      totalScore += answerScore;
+    }
+  });
+  document.getElementById('current-score').textContent = totalScore;
+}
+
+// Function to reveal/hide answer box
+function revealAnswer(event, answerBox = null) {
+  if (!answerBox) {
+    answerBox = event.target.closest('.answer-box');
+  }
+  answerBox.classList.toggle('hidden-answer');
+  const numberCircle = answerBox.querySelector('.number-circle');
+  if (answerBox.classList.contains('hidden-answer')) {
+    numberCircle.classList.remove('hidden-circle');
+  } else {
+    numberCircle.classList.add('hidden-circle');
+    playCorrectAnswerAudio();
+  }
+  updateCurrentScore();
+}
+
+function playCorrectAnswerAudio(){
+  correct_answer_audio.volume = 0.8
+  correct_answer_audio.play();
+  correct_answer_audio.currentTime=0;
+}
+
+function playWrongAnswerAudio(){
+  wrong_answer_audio.play();
+  wrong_answer_audio.currentTime=0;
+}
+
+function handleKeyPress(event) {
+  const key = event.key.toUpperCase();
+  if (key >= '1' && key <= '8') {
+    const answerBox = document.querySelector(`#answer-box-${key}`);
+    const numberCircle = answerBox.querySelector('.number-circle');
+    if (answerBox && numberCircle.style.zIndex !== "-1") {
+      revealAnswer(null, answerBox);
+    }
+  }
+
+  if (key == 'X') {
+    const xImg = document.getElementById("x-img");
+    wrong_answer_audio.play();
+    wrong_answer_audio.currentTime=0;
+    xImg.style.display = 'block';
+    setTimeout(() => {xImg.style.display = 'none';}, 1150);
+  }
+}
+
+</script>
+</head>
+<body>
+  <img id="x-img" src="X2.png">
+  <div class="score-square">
+    <span id="current-score">0</span>
+  </div>
+  <div class="board">
+    <div class="column">
+      <div class="answer-box hidden-answer" id="answer-box-1"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> MOTHER/PARENT </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">1</span>
+      </div>
+      <div class="answer-box hidden-answer" id="answer-box-2"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> PASTOR </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">2</span>
+      </div>
+      <div class="answer-box hidden-answer" id="answer-box-3"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> SPOUSE </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">3</span>
+      </div>
+      <div class="answer-box hidden-answer" id="answer-box-4"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> SIBLING </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">4</span>
+      </div>
+    </div>
+    <div class="column">
+      <div class="answer-box hidden-answer" id="answer-box-5"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> MOTHER/PARENT </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">5</span>
+      </div>
+      <div class="answer-box hidden-answer" id="answer-box-6"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> MOTHER/PARENT </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">6</span>
+      </div>
+      <div class="answer-box hidden-answer" id="answer-box-7"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> MOTHER/PARENT </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">7</span>
+      </div>
+      <div class="answer-box hidden-answer" id="answer-box-8"  onclick="revealAnswer(event)">
+        <div class="answer-text hidden-answer">
+          <span class="answer-answer"> MOTHER/PARENT </span>
+          <span class="answer-score">69</span>
+        </div>
+        <span class="number-circle">8</span>
+      </div>
+    </div>
+  </div>
+  <div id="question-text" class="question-text">
+    <span></span>
+  </div>
+  <button id="new-question" class="new-question">New Question</button>
+</body>
+</html>
