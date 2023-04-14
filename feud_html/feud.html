@@ -11,242 +11,179 @@ then you will get buzzed, uh oh! -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Family Feud Answer Boxes</title>
-<style>
-  /* General styles */
-  body {
-    font-family: Arial, sans-serif;
-    background-color: black;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-
-  /* Score square styles */
-  .score-square {
-    background-color: darkblue;
-    color: white;
-    font-size: 60px;
-    padding: 10px 20px;
-    min-width: 120px;
-    min-height: 60px;
-    border-radius: 8px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    border: 4px solid white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* Board and column styles */
-  .board {
-    background-color: black;
-    border: 5px solid #F4C206;
-    border-radius: 10px;
-    padding: 5px;
-    display: flex;
-    justify-content: center;
-    max-width: 800px;
-  }
-  .column {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  /* Answer box and related elements styles */
-  .answer-box {
-    background-color: #0b3d91;
-    border: 2px solid #f0f0f0;
-    padding: 10px;
-    margin: 2px;
-    cursor: pointer;
-    width: 250px;
-    text-align: center;
-    font-size: 24px;
-    color: #f0f0f0;
-    position: relative;
-    border-radius: 3px;
-    height: 28px;
-    overflow: hidden;
-  }
-  .answer-box.hidden-answer::before {
-    content: attr(data-number);
-    border: 2px solid #f0f0f0;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
-    font-weight: bold;
-    color: #f0f0f0;
-    background: #3E85DA;
-    height: 46px;
-    width: 268px;
-  }
-  .number-circle {
-    z-index: -1;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
-    font-family: impact;
-    color: #f0f0f0;
-    background-color: #1A1D59;
-    border: 2px solid #4747c9;
-    border-radius: 50%;
-    width: 50px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-  }
-  .hidden-circle {
-    display: none;
-  }
-  .answer-box .answer-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 1; /* add this */
-    animation: rollIn 0.3s forwards; /* add this */
-
-}
-
-.answer-box .answer-text::before {
-content: "";
-width: 100%;
-height: 100%;
-background-color: #0652B7;
-position: absolute;
-top: 0;
-left: 0;
-z-index: -1; /* add this */
-}
-
-.answer-box.hidden-answer .answer-text {
-  opacity: 0; /* add this */
-  animation: rollOut 0.3s forwards; /* add this */
-}
-
-@keyframes rollIn {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-@keyframes rollOut {
-  from { transform: translateY(0); }
-  to { transform: translateY(-100%); }
-}
-
-.answer-score {
-  height: 48px;
-  width: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid white;
-  background: #3E85DA;
-  position: fixed;
-  font-weight: bold;
-  font-size: 26px;
-  right: -2px;
-}
-
-.answer-answer{
-  padding-right:40px;
-  font-size: 26px;
-  font-weight: bold;
-  font-stretch: condensed;
-}
-
-#x-img {
-  display: none;
-  position: fixed;
-  height: 200px;
-  width: 200px;
-  top: 55%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index:3;
-}
-
-/* Add these styles for the question text */
-.question-text {
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.new-question {
-  display: block;
-  margin: 20px auto;
-  padding: 10px 20px;
-  font-size: 18px;
-  font-weight: bold;
-  color: white;
-  background-color: #007bff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.new-question:hover {
-  background-color: #0056b3;
-}
-
-</style>
+<title>Family Feud</title>
+<link rel="stylesheet" href="feud_styles.css">
 <script>
 
 // Initialize an object to store questions and scores
 const question_bank = {};
+let currentRoundMultiplier = 1;
+let button1x;
+let button2x;
+let button3x;
+let questionIndex;
+let isRulesVisible = false;
+let currentRoundOver = false;
 
-const correct_answer_audio = new Audio('correct_4.mp3');
-const wrong_answer_audio = new Audio('wrong_2.mp3');
+
+const correct_answer_audio = new Audio('sounds/correct_4.mp3');
+const wrong_answer_audio = new Audio('sounds/wrong_2.mp3');
+const intro_audio = new Audio('sounds/intro.mp3');
+const face_off_1_audio = new Audio('sounds/face_off_1.mp3');
+const face_off_2_audio = new Audio('sounds/face_off_2.mp3');
+const round_win_audio = new Audio('sounds/round_win.mp3');
+const game_win_audio = new Audio('sounds/game_winner.mp3');
+const fast_money_win_audio = new Audio('sounds/fast_money_win.mp3');
+
 
 // Function to initialize the game
 function initGame() {
   loadCSV('question_bank.csv').then(() => {
-    updateAnswerBoxes();
+    updateAnswerBoxes(0);
     document.addEventListener('keydown', handleKeyPress);
 
     const newQuestionButton = document.getElementById('new-question');
     newQuestionButton.addEventListener('click', () => {
-        updateAnswerBoxes();
+        resetBoard();
+        currentRoundMultiplier = 1;
+        updateAnswerBoxes(0);
     });
+
+        // Add a reset button event listener
+    const resetBoardButton = document.getElementById('reset-board');
+    resetBoardButton.addEventListener('click', () => {
+        resetBoard();
+    });
+
+    const buttonA = document.getElementById('button-a');
+    buttonA.addEventListener('click', () => {
+      assignScore('team-a-score');
+    });
+
+    const buttonB = document.getElementById('button-b');
+    buttonB.addEventListener('click', () => {
+      assignScore('team-b-score');
+    });
+
+    const button1x = document.getElementById('button-1x');
+    button1x.addEventListener('click', () => {
+      currentRoundMultiplier = 1;
+      updateCurrentScore();
+      updateMultiplierButtons(1);
+    });
+
+    const button2x = document.getElementById('button-2x');
+    button2x.addEventListener('click', () => {
+      currentRoundMultiplier = 2;
+      updateCurrentScore();
+      updateMultiplierButtons(2);
+    });
+
+    const button3x = document.getElementById('button-3x');
+    button3x.addEventListener('click', () => {
+      currentRoundMultiplier = 3;
+      updateCurrentScore();
+      updateMultiplierButtons(3);
+    });
+
+    document.getElementById('question-number-input').addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        questionIndex = parseInt(event.target.value, 10);
+        if (!isNaN(questionIndex) && questionIndex > 0) {
+          updateToNewQuestion(questionIndex);
+        }
+        event.target.value = ''; // Clear the input value after processing
+      }
+    });
+
+
+    document.getElementById('fast-money').addEventListener('click', () => {
+      window.location.href = 'fastmoney.html';
+    });
+
+    const rulesButton = document.getElementById('rules-button');
+    rulesButton.addEventListener('click', () => {
+    const rulesPopup = document.getElementById('rules-popup');
+    if (isRulesVisible) {
+      rulesPopup.style.display = 'none';
+      isRulesVisible = false;
+    } else {
+      rulesPopup.style.display = 'block';
+      isRulesVisible = true;
+    }
+  });
+
+
+    const rulesPopup = document.getElementById('rules-popup');
+    rulesPopup.addEventListener('click', () => {
+      rulesPopup.style.display = 'none';
+    });
+
+
   })
+
+  updateMultiplierButtons(1);
+
+}
+
+function updateToNewQuestion(questionIndex) {
+  updateAnswerBoxes(questionIndex)
+}
+
+
+function updateMultiplierButtons(n) {
+
+  let button_clicked = document.getElementById(`button-${n}x`);
+  button_clicked.classList.add('selected-multiplier');
+
+  let filteredNumbers = [1,2,3].filter(function(i) {
+    return i !== n;
+  });
+
+  filteredNumbers.forEach(function (item) {
+    let button = document.getElementById(`button-${item}x`); // Get the element by its ID
+    button.classList.remove('selected-multiplier'); // Remove the class from the element
+  });
+}
+
+function resetBoard() {
+  const answerBoxes = document.querySelectorAll('.answer-box');
+  answerBoxes.forEach((answerBox) => {
+    if (!answerBox.classList.contains('hidden-answer')) {
+      answerBox.classList.add('hidden-answer');
+      const numberCircle = answerBox.querySelector('.number-circle');
+      numberCircle.classList.remove('hidden-circle');
+    }
+  });
+  updateCurrentScore();
+  updateMultiplierButtons(1);
+  currentRoundOver = false;
 }
 
 // Run the initGame function when the DOM is ready
 document.addEventListener('DOMContentLoaded', initGame);
 
-// A simple CSV parser function
 function parseCSV(text) {
   // Split the text into rows and remove the header row
   const rows = text.trim().split('\n');
-  const header = rows.shift().split(',');
+  const header = splitRow(rows.shift());
 
   // Map the rows to objects with properties based on the header row
   return rows.map((row) => {
-    const rowData = row.split(',');
+    const rowData = splitRow(row);
     return header.reduce((acc, key, idx) => {
       acc[key] = rowData[idx];
       return acc;
     }, {});
   });
 }
+
+function splitRow(row) {
+  // Regular expression to split by comma, ignoring commas within double quotes
+  const regex = /,(?=(?:[^"]*"[^"]*")*[^"]*$)/;
+  return row.split(regex);
+}
+
 
 // Function to load and parse the CSV file
 async function loadCSV(fileUrl) {
@@ -265,10 +202,19 @@ async function loadCSV(fileUrl) {
 }
 
 // Update the answer boxes with data from the question bank
-// Update the answer boxes with data from the question bank
-function updateAnswerBoxes() {
-  const randomIndex = Math.floor(Math.random() * Object.keys(question_bank).length);
-  const randomQuestion = question_bank[randomIndex];
+function updateAnswerBoxes(n) {
+
+  resetBoard()
+
+  let randomQuestion;
+  if (n == 0){
+    questionIndex = Math.floor(Math.random() * Object.keys(question_bank).length);
+    randomQuestion = question_bank[questionIndex];
+  } else {
+    randomQuestion = question_bank[n];
+  }
+
+  document.getElementById("question-number-input").placeholder = "QID:" + questionIndex
 
   for (let i = 1; i <= 8; i++) {
     const answerBox = document.querySelector(`#answer-box-${i}`);
@@ -291,7 +237,7 @@ function updateAnswerBoxes() {
 
   // Update the question text
   const questionText = document.getElementById('question-text').querySelector('span');
-  questionText.textContent = randomQuestion['Question'];
+  questionText.textContent = randomQuestion['Question'].replace(/^"|"$/g, '');
 }
 
 // Function to update the pointer-events style of the answer boxes
@@ -310,12 +256,15 @@ function updatePointerEvents() {
 function updateCurrentScore() {
   const answerBoxes = document.querySelectorAll('.answer-box');
   let totalScore = 0;
-  answerBoxes.forEach((answerBox) => {
-    if (!answerBox.classList.contains('hidden-answer')) {
-      const answerScore = parseInt(answerBox.querySelector('.answer-score').textContent);
-      totalScore += answerScore;
-    }
-  });
+  if (!currentRoundOver){
+    answerBoxes.forEach((answerBox) => {
+      if (!answerBox.classList.contains('hidden-answer')) {
+        const answerScore = parseInt(answerBox.querySelector('.answer-score').textContent);
+        totalScore += answerScore;
+      }
+    });
+  }
+  totalScore = totalScore * currentRoundMultiplier
   document.getElementById('current-score').textContent = totalScore;
 }
 
@@ -346,7 +295,43 @@ function playWrongAnswerAudio(){
   wrong_answer_audio.currentTime=0;
 }
 
+function playIntroAudio() {
+intro_audio.play();
+intro_audio.currentTime = 0;
+}
+
+function playFaceOff1Audio() {
+face_off_1_audio.play();
+face_off_1_audio.currentTime = 0;
+}
+
+function playFaceOff2Audio() {
+face_off_2_audio.play();
+face_off_2_audio.currentTime = 0;
+}
+
+function playRoundWinAudio() {
+round_win_audio.play();
+round_win_audio.currentTime = 0;
+}
+
+function playGameWinAudio() {
+game_win_audio.play();
+game_win_audio.currentTime = 0;
+}
+
+function playFastMoneyWinAudio() {
+fast_money_win_audio.play();
+fast_money_win_audio.currentTime = 0;
+}
+
 function handleKeyPress(event) {
+
+  const inputElement = document.getElementById('question-number-input');
+  if (inputElement === document.activeElement) {
+    return;
+  }
+
   const key = event.key.toUpperCase();
   if (key >= '1' && key <= '8') {
     const answerBox = document.querySelector(`#answer-box-${key}`);
@@ -365,40 +350,115 @@ function handleKeyPress(event) {
   }
 }
 
+function assignScore(teamId) {
+  const currentScore_el = document.getElementById('current-score')
+  const currentScore_val = parseInt(currentScore_el.textContent);
+  const teamScoreElement = document.getElementById(teamId).querySelector('span');
+  const teamScore = parseInt(teamScoreElement.textContent);
+  teamScoreElement.textContent = teamScore + currentScore_val;
+  currentScore_el.textContent = 0;
+  currentRoundOver = true;
+  checkGameWon(currentScore_val)
+}
+
+function checkGameWon(currentScore) {
+  const teamAScore = parseInt(document.getElementById('team-a-score').querySelector('span').textContent);
+  const teamBScore = parseInt(document.getElementById('team-b-score').querySelector('span').textContent);
+
+  if (teamAScore >= 300 || teamBScore >= 300) {
+    gameIsOver();
+  } else if (currentScore > 0) {
+    playRoundWinAudio()
+  }
+}
+
+function gameIsOver(teamAScore, teamBScore) {
+  playGameWinAudio();
+
+  const colors = ['gold', 'red', 'green', 'blue'];
+  const flashCount = 10;
+  const colorDuration = 300; // Duration of each color
+  const blackDuration = 300; // Duration of black
+
+  let currentFlash = 0;
+  let interval = setInterval(() => {
+    const colorIndex = currentFlash % colors.length;
+    const color = colors[colorIndex];
+
+    document.body.style.backgroundColor = color;
+    setTimeout(() => {
+      document.body.style.backgroundColor = 'black';
+    }, colorDuration);
+
+    currentFlash++;
+    if (currentFlash === flashCount) {
+      clearInterval(interval);
+    }
+  }, colorDuration + blackDuration);
+}
+
+
+
 </script>
 </head>
 <body>
-  <img id="x-img" src="X2.png">
-  <div class="score-square">
+  <div class="logo-container">
+    <img src="images/logo2.png" alt="Family Feud Logo" class="logo">
+  </div>
+  <div style="padding: 30px;"></div>
+  <img id="x-img" src="images/X.png">
+  <div class="rules-popup" id="rules-popup">
+    <p><b>Rules:</b></p>
+
+    <p>The game begins with two teams, usually families, consisting of five members each.</p>
+
+    <p><b>Face-Off:</b> At the start of each round, a representative from each team competes to answer the survey question. The player who buzzes in first with the highest-ranking response gains control of the round for their team. </p>
+
+    <p><b> Main Round:</b> Team members take turns guessing answers to the question. They continue until all answers are revealed or they get three strikes (incorrect answers). Correct answers earn points equal to the number of survey responses.</p>
+
+    <p><b> Stealing:</b> If a team gets three strikes, the opponent can steal by guessing any of the remaining answers. If successful, they steal all of the points in that round; otherwise, the first team keeps the points.</p>
+
+    <p><b> Rounds & Scoring:</b> There are four main rounds with points doubling in the third and tripling in the fourth, allowing for big comebacks. The game ends after the 4th round, or when a team reaches 300 points. </p>
+
+    <p><b> Fast Money:</b> In the final stage of the game, two members of the winning team take turns answering a series of five survey questions within a specific time limit. The goal is to accumulate a combined total of 200 points or more. If successful, the team wins the grand prize.</p>
+
+  </div>
+  <div class="score-square" style="margin-top: 100px;">
     <span id="current-score">0</span>
+  </div>
+  <div class="score-square team-score" id="team-a-score" style="margin-right: 950px;">
+    <span>0</span>
+  </div>
+  <div class="score-square team-score" id="team-b-score" style="margin-left: 950px;">
+    <span>0</span>
   </div>
   <div class="board">
     <div class="column">
       <div class="answer-box hidden-answer" id="answer-box-1"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> MOTHER/PARENT </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">1</span>
       </div>
       <div class="answer-box hidden-answer" id="answer-box-2"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> PASTOR </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">2</span>
       </div>
       <div class="answer-box hidden-answer" id="answer-box-3"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> SPOUSE </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">3</span>
       </div>
       <div class="answer-box hidden-answer" id="answer-box-4"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> SIBLING </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">4</span>
       </div>
@@ -406,29 +466,29 @@ function handleKeyPress(event) {
     <div class="column">
       <div class="answer-box hidden-answer" id="answer-box-5"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> MOTHER/PARENT </span>
-          <span class="answer-score">69</span>
-        </div>
+          <span class="answer-answer"></span>
+          <span class="answer-score"></span>
+      </div>
         <span class="number-circle">5</span>
       </div>
       <div class="answer-box hidden-answer" id="answer-box-6"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> MOTHER/PARENT </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">6</span>
       </div>
       <div class="answer-box hidden-answer" id="answer-box-7"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> MOTHER/PARENT </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">7</span>
       </div>
       <div class="answer-box hidden-answer" id="answer-box-8"  onclick="revealAnswer(event)">
         <div class="answer-text hidden-answer">
-          <span class="answer-answer"> MOTHER/PARENT </span>
-          <span class="answer-score">69</span>
+            <span class="answer-answer"></span>
+            <span class="answer-score"></span>
         </div>
         <span class="number-circle">8</span>
       </div>
@@ -437,6 +497,22 @@ function handleKeyPress(event) {
   <div id="question-text" class="question-text">
     <span></span>
   </div>
-  <button id="new-question" class="new-question">New Question</button>
+  <div class="buttons-container">
+    <button id="rules-button" class="new-question">Rules</button>
+    <button id="new-question" class="new-question">
+      <img src="images/shuffle.png" alt="Shuffle" width="25" height="25">
+    </button>
+    <button id="reset-board" class="new-question">
+      <img src="images/reset.png" alt="Reset" width="25" height="25">
+    </button>
+    <button id="button-1x" class="new-question">1x</button>
+    <button id="button-2x" class="new-question">2x</button>
+    <button id="button-3x" class="new-question">3x</button>
+    <button id="button-a" class="new-question">A</button>
+    <button id="button-b" class="new-question">B</button>
+    <button id="fast-money" class="new-question">Play Fast Money</button>
+    <input type="text" id="question-number-input" placeholder="ID:" size=3>
+
+  </div>
 </body>
 </html>

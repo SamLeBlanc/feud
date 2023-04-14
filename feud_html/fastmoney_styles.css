@@ -1,0 +1,147 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  -webkit-user-select: none; /* Chrome, Safari, and Opera */
+-moz-user-select: none; /* Firefox */
+-ms-user-select: none; /* Internet Explorer and Edge */
+user-select: none; /* Standard syntax */
+}
+
+.board {
+  background-color: #030763;
+  border: 5px solid #0EA4F2;
+  border-radius: 10px;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  max-width: 800px;
+  position: relative;
+  padding: 40px 20px 20px 20px;
+  margin-top: 100px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.entry-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 28px;
+  background-color: black;
+  padding: 10px;
+  margin: 5px;
+  width: 300px;
+  text-align: center;
+  font-size: 28px;
+  color: #f0f0f0;
+  position: relative;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-stretch: condensed;
+}
+
+.answer-box {
+background-color: transparent;
+border: none;
+color: white;
+font-size: 28px;
+font-weight: bold;
+font-stretch: condensed;
+width: 80%; /* Adjust width as needed */
+text-align: left;
+text-transform: uppercase;
+
+}
+
+.score-box {
+background-color: transparent;
+border: none;
+color: white;
+font-size: 28px;
+font-weight: bold;
+font-stretch: condensed;
+width: 15%; /* Adjust width as needed */
+text-align: center;
+}
+
+
+.answer-box:focus, .score-box:focus {
+  outline: none;
+}
+
+.total-score {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #f0f0f0;
+}
+
+.logo-container {
+display: flex;
+justify-content: center;
+align-items: center;
+margin: 10px;
+top: 0px;
+position: absolute;
+}
+
+.logo {
+height: 200px;
+margin: 0 auto;
+}
+
+::placeholder {
+color: white;
+}
+
+.new-question {
+display: block;
+padding-top: 5px;
+font-size: 18px;
+font-weight: bold;
+color: white;
+background-color: #007bff;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+}
+.new-question:hover {
+background-color: #0056b3;
+}
+
+
+.button-container {
+display: flex;
+justify-content: center;
+gap: 20px;
+padding:20px;
+}
+
+#timer-display{
+  position: absolute;
+  margin-top: 470px;
+  min-width: 70px;
+  color: white;
+  background: darkblue;
+  font-weight: bold;
+  border: solid 4px lightblue;
+  padding: 5px 10px;
+  font-size: 44px;
+  border-radius: 50%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+}

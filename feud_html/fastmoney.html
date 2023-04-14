@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="fastmoney_styles.css">
+<title>Fast Money</title>
+</head>
+<style>
+
+</style>
+<body>
+  <div class="logo-container">
+    <img src="images/logo2.png" alt="Family Feud Logo" class="logo">
+  </div>
+  <div style="padding: 60px;"></div>
+  <div class="board">
+    <div class="column">
+      <div class="entry-box">
+        <input class="answer-box" type="text">
+        <input class="score-box" pattern="\d*" type="text">
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box" style="background:#030763; pointer-events: none;">
+
+      </div>
+    </div>
+    <div class="column">
+      <div class="entry-box">
+        <input class="answer-box" type="text">
+        <input class="score-box" pattern="\d*" type="text">
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box">
+        <input class="answer-box" type="text" >
+        <input class="score-box" pattern="\d*" type="text" >
+      </div>
+      <div class="entry-box" style="pointer-events:none; width: 150px;     margin-left: 154px;">
+          <input class="answer-box" type="text" placeholder='TOTAL' >
+          <span id="total-score">0</span>
+      </div>
+    </div>
+  </div>
+  <div class="button-container">
+  <button id="loadFeud" class="new-question">Play Feud</button>
+  <button id="reset-board" class="new-question">
+    <img src="images/reset.png" alt="Reset" width="25" height="25">
+  </button>
+  <button id="start-timer-20" class="new-question">:20</button>
+  <button id="start-timer-25" class="new-question">:25</button>
+  <button id="mute-button" class="new-question">Mute</button>
+</div>
+<div id="timer-display">
+  <span style="font-size: 24px;"></span>
+</div>
+<script>
+
+  let timerInterval;
+
+const points_audio = new Audio('sounds/fast_money_points.mp3');
+const no_points_audio = new Audio('sounds/fast_money_no_points.mp3');
+const duplicate_answer_audio = new Audio('sounds/fast_money_duplicate_answer.mp3');
+
+const clock_appears_audio = new Audio('sounds/clock_appears.mp3');
+const person_1_background = new Audio('sounds/fast_money_1_background.mp3');
+const person_2_background = new Audio('sounds/fast_money_2_background.mp3');
+const fast_money_win_audio = new Audio('sounds/fast_money_winner.mp3');
+const outro_music_audio = new Audio('sounds/outro_music.mp3');
+
+let isMuted = false;
+
+let timerStarted = false;
+let timerDuration = 0;
+
+document.getElementById('start-timer-20').addEventListener('click', () => {
+  if (!timerStarted) {
+    timerStarted = true;
+    timerDuration = 20;
+    showTimer(timerDuration);
+  } else if (timerDuration === 20) {
+    timerStarted = false;
+    startTimer(20);
+  }
+});
+
+document.getElementById('start-timer-25').addEventListener('click', () => {
+  if (!timerStarted) {
+    timerStarted = true;
+    timerDuration = 25;
+    showTimer(timerDuration);
+  } else if (timerDuration === 25) {
+    timerStarted = false;
+    startTimer(25);
+  }
+});
+
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  const timerDisplay = document.getElementById('timer-display');
+  timerDisplay.style.display = 'none';
+}
+
+
+function toggleMute() {
+  isMuted = !isMuted;
+  points_audio.muted = isMuted;
+  no_points_audio.muted = isMuted;
+  duplicate_answer_audio.muted = isMuted;
+  person_1_background.muted = isMuted;
+  person_2_background.muted = isMuted;
+  fast_money_win_audio.muted = isMuted;
+  outro_music_audio.muted = isMuted;
+
+  // Update the button text
+  const muteButton = document.getElementById('mute-button');
+  muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+}
+
+document.getElementById('mute-button').addEventListener('click', toggleMute);
+
+function playPerson1Background() {
+  person_1_background.play();
+  person_1_background.currentTime = 0;
+}
+
+function playPerson2Background() {
+  person_2_background.play();
+  person_2_background.currentTime = 0;
+}
+
+function playPointsAudio() {
+  points_audio.play();
+  points_audio.currentTime = 0;
+}
+
+function clockAppearsAudio() {
+  clock_appears_audio.play();
+  clock_appears_audio.currentTime = 0;
+}
+
+function playNoPointsAudio() {
+  no_points_audio.play();
+  no_points_audio.currentTime = 0;
+}
+
+function duplicateAnswerAudio() {
+  duplicate_answer_audio.play();
+  no_points_audio.currentTime = 0;
+}
+
+function fastMoneyWinAudio() {
+  fast_money_win_audio.play();
+  fast_money_win_audio.currentTime = 0;
+}
+
+function outroMusicAudio() {
+  outro_music_audio.volume = 0.8
+  outro_music_audio.play();
+  outro_music_audio.currentTime = 0;
+}
+
+const scoreBoxes = document.querySelectorAll('.score-box');
+const totalScoreElement = document.getElementById('total-score');
+
+scoreBoxes.forEach((scoreBox) => {
+  scoreBox.addEventListener('input', () => {
+      // Replace non-numeric characters with an empty string
+      scoreBox.value = scoreBox.value.replace(/\D/g, '');
+
+      let totalScore = 0;
+      scoreBoxes.forEach((box) => {
+          const score = parseInt(box.value);
+          if (!isNaN(score) && box.style.color === 'white') {
+              totalScore += score;
+          }
+      });
+      totalScoreElement.textContent = totalScore;
+  });
+
+  // Add focus event listener
+  scoreBox.addEventListener('focus', () => {
+      scoreBox.style.color = 'black';
+  });
+
+  // Add blur event listener
+  scoreBox.addEventListener('blur', () => {
+      if (scoreBox.value) {
+          scoreBox.style.color = 'white';
+      } else {
+          scoreBox.style.color = 'black';
+      }
+      // Update the total score when the score box loses focus
+      let totalScore = 0;
+      let currentScore = parseInt(scoreBox.value);
+      scoreBoxes.forEach((box) => {
+          const score = parseInt(box.value);
+          if (!isNaN(score) && box.style.color === 'white') {
+              totalScore += score;
+          }
+      });
+      totalScoreElement.textContent = totalScore;
+
+      // Play the appropriate sound based on the score
+      if (!isNaN(currentScore) && currentScore > 0) {
+          playPointsAudio()
+      } else if (currentScore == 0) {
+          playNoPointsAudio()
+      }
+
+      if (totalScore >= 200) {
+        gameIsOver()
+      }
+
+  });
+});
+
+
+// Check if the active element is an input element
+function isInputActive() {
+  const activeElement = document.activeElement;
+  return activeElement && activeElement.tagName.toLowerCase() === 'input';
+}
+
+// Add event listener for the keydown event
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'x' || event.key === 'X') {
+      if (!isInputActive()) {
+          duplicateAnswerAudio()
+      }
+  }
+});
+
+document.getElementById('loadFeud').addEventListener('click', () => {
+  window.location.href = 'feud.html';
+});
+
+document.getElementById('reset-board').addEventListener('click', () => {
+  const answerBoxes = document.querySelectorAll('.answer-box');
+  answerBoxes.forEach((answerBox) => {
+      answerBox.value = '';
+  });
+
+  scoreBoxes.forEach((scoreBox) => {
+      scoreBox.value = '';
+      scoreBox.style.color = 'black';
+  });
+
+  totalScoreElement.textContent = '0';
+});
+
+
+function showTimer(initialTime) {
+  const timerDisplay = document.getElementById('timer-display');
+  timerDisplay.style.display = 'flex';
+  timerDisplay.textContent = initialTime;
+  clockAppearsAudio()
+}
+
+
+function startTimer(n) {
+
+  const timerDisplay = document.getElementById('timer-display');
+  let timeRemaining = n;
+  timerDisplay.textContent = timeRemaining;
+
+  // Clear any existing interval before starting a new one
+  clearInterval(timerInterval);
+
+  if (n == 20) playPerson1Background();
+  if (n == 25) playPerson2Background();
+
+  timerInterval = setInterval(() => {
+    if (timeRemaining > -3) {
+      timeRemaining--;
+      timerDisplay.textContent = Math.max(timeRemaining,0);
+    }
+
+    if (timeRemaining <= -3) {
+        timerStarted = false;
+        clearInterval(timerInterval);
+        timerDisplay.textContent = '';
+        timerDisplay.style.display = 'none';
+      }
+  }, 1000);
+}
+
+
+
+function gameIsOver(teamAScore, teamBScore) {
+
+  fastMoneyWinAudio()
+
+  setTimeout(() => {
+    outroMusicAudio()
+  }, 6000);
+
+  const flashCount = 10;
+  const colorDuration = 300; // Duration of each color
+  const blackDuration = 300; // Duration of black
+
+  let currentFlash = 0;
+  let interval = setInterval(() => {
+    document.body.style.backgroundColor = 'gold';
+    setTimeout(() => {
+      document.body.style.backgroundColor = 'black';
+    }, colorDuration);
+
+    currentFlash++;
+    if (currentFlash === flashCount) {
+      clearInterval(interval);
+    }
+  }, colorDuration + blackDuration);
+}
+
+
+
+</script>
+</body>
+</html>
