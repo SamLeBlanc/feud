@@ -26,6 +26,7 @@ let isRulesVisible = false;
 let currentRoundOver = false;
 let strikeCount = 0;
 
+const steve_intro_audio = new Audio('sounds/steve_intro.mp3');
 const correct_answer_audio = new Audio('sounds/correct_4.mp3');
 const wrong_answer_audio = new Audio('sounds/wrong_2.mp3');
 const intro_audio = new Audio('sounds/intro.mp3');
@@ -84,6 +85,11 @@ function initGame() {
       currentRoundMultiplier = 3;
       updateCurrentScore();
       updateMultiplierButtons(3);
+    });
+
+    const steveButton = document.getElementById('steve-button');
+    steveButton.addEventListener('click', () => {
+      playSteveIntro()
     });
 
     document.getElementById('question-number-input').addEventListener('keyup', function(event) {
@@ -283,6 +289,11 @@ function revealAnswer(event, answerBox = null) {
     playCorrectAnswerAudio();
   }
   updateCurrentScore();
+}
+
+function playSteveIntro(){
+  steve_intro_audio.play();
+  steve_intro_audio.currentTime=0;
 }
 
 function playCorrectAnswerAudio(){
@@ -504,6 +515,7 @@ function gameIsOver(teamAScore, teamBScore) {
     <span></span>
   </div>
   <div class="buttons-container">
+    <button id="steve-button" class="new-question">!!</button>
     <button id="rules-button" class="new-question">Rules</button>
     <button id="new-question" class="new-question">
       <img src="images/shuffle.png" alt="Shuffle" width="25" height="25">
