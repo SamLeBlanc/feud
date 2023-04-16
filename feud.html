@@ -24,7 +24,7 @@ let button3x;
 let questionIndex;
 let isRulesVisible = false;
 let currentRoundOver = false;
-
+let strikeCount = 0;
 
 const correct_answer_audio = new Audio('sounds/correct_4.mp3');
 const wrong_answer_audio = new Audio('sounds/wrong_2.mp3');
@@ -157,6 +157,7 @@ function resetBoard() {
   });
   updateCurrentScore();
   updateMultiplierButtons(1);
+  strikeCount = 0;
   currentRoundOver = false;
 }
 
@@ -342,7 +343,9 @@ function handleKeyPress(event) {
   }
 
   if (key == 'X') {
+    strikeCount = (strikeCount % 3) + 1;
     const xImg = document.getElementById("x-img");
+    xImg.src = `images/${strikeCount}x.png`;
     wrong_answer_audio.play();
     wrong_answer_audio.currentTime=0;
     xImg.style.display = 'block';
@@ -408,6 +411,9 @@ function gameIsOver(teamAScore, teamBScore) {
   <div style="padding: 30px;"></div>
   <img id="x-img" src="images/X.png">
   <div class="rules-popup" id="rules-popup">
+
+    <b>Family Feud</b> is a game show where two teams compete to guess the most popular answers to a set of survey questions. The answers are based on responses from a group of 100 Americans, reflecting public opinion on various topics. The best answers are not necessarily "right" answers, but the most commonly provided response to the question.
+
     <p><b>Rules:</b></p>
 
     <p>The game begins with two teams, usually families, consisting of five members each.</p>
