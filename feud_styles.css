@@ -172,7 +172,7 @@ z-index:3;
 
 /* Add these styles for the question text */
 .question-text {
-color: white;
+color: black;
 font-size: 24px;
 font-weight: bold;
 margin-top: 20px;
@@ -224,7 +224,7 @@ margin: 0 auto;
 }
 
 .question-text {
-color: white;
+color: black;
 font-size: 24px;
 font-weight: bold;
 margin-top: 20px;
